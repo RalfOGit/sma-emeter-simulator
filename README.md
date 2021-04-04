@@ -5,7 +5,7 @@ SMA-Emeters(TM) send out udp packets including electrical power and energy measu
 
 The executable starts by assembling a udp datagram as described in the SMA-Emeter(TM) specification document.
 
-Afterwards it starts an infinite main loop. Within the main loop it repetitively transmits the same udp datagram every 1000 milliseconds. For now, it only updates the timestamp inside the packet.
+Afterwards it starts an infinite main loop. Within the main loop it repetitively transmits the same udp datagram every 1000 milliseconds, while updating the timestamp inside the packet.
 
 The software comes as is. No warrantees whatsoever are given and no responsibility is assumed in case of failure. There is neither a GUI nor a configuration file. Configurations must be tweaked by modifying main.cpp. A number of obis definitions are given, some of them are commented out, since I do not need them.
 
