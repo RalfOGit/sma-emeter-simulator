@@ -1,9 +1,9 @@
 # sma-emeter-simulator
 An SMA(TM) emeter simulator written in C++. It mimics an SMA(TM) emeter device on your local network by generating the same kind of udp packets that an actual SMA(TM) emeter would generate.
 
-SMA-Emeters(TM) send out udp packets including electrical power and energy measurements at intervals of 1000ms. Each udp packet is 600 bytes long and its format is specified in an publicly available specification document provided by the manufacturer.
+SMA-Emeters(TM) send out udp packets including electrical power and energy measurements at intervals of 1000ms. Each udp packet is 600 bytes long and its format is specified in an publicly available specification document provided by the manufacturer (https://www.sma.de/fileadmin/content/global/Partner/Documents/SMA_Labs/EMETER-Protokoll-TI-en-10.pdf).
 
-The executable starts by assembling a udp datagram as described in the SMA-Emeter(TM) specification document https://www.sma.de/fileadmin/content/global/Partner/Documents/SMA_Labs/EMETER-Protokoll-TI-en-10.pdf.
+The executable starts by assembling a udp datagram as described in the SMA-Emeter(TM) specification document.
 
 Afterwards it starts an infinite main loop. Within the main loop it repetitively transmits the same udp datagram every 1000 milliseconds, while updating the timestamp inside the packet.
 
