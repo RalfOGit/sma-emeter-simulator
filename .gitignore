@@ -1,0 +1,49 @@
+x64/
+out/
+build/
+install/
+.vs/
+.vscode/
+
+emeter-grabber-debug
+emeter-grabber-release
+*.tar
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# VisualStudio files
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
