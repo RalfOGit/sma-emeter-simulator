@@ -8,7 +8,7 @@
 #endif
 
 #include <LocalHost.hpp>
-#include <SpeedwireDiscovery.hpp>
+#include <AddressConversion.hpp>
 #include <SpeedwireSocketFactory.hpp>
 #include <SpeedwireHeader.hpp>
 #include <SpeedwireEmeterProtocol.hpp>
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
             uint32_t serial = emeter.getSerialNumber();
             uint32_t timer  = emeter.getTime();
 
-            // extract obis data from the emeter packet and pass each obis data element to the obis filter
+            // extract obis data from the emeter packet and print each obis element
             void* obis = emeter.getFirstObisElement();
             while (obis != NULL) {
                 emeter.printObisElement(obis, stderr);
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
         std::vector<std::string> localIPs = localhost.getLocalIPv4Addresses();
         for (auto& local_ip_addr : localIPs) {
             SpeedwireSocket socket = socket_factory->getSendSocket(SpeedwireSocketFactory::UNICAST, local_ip_addr);
-            fprintf(stdout, "broadcast sma emeter packet to %s (via interface %s)\n", localhost.toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
+            fprintf(stdout, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
             int nbytes = socket.send(udp_packet, sizeof(udp_packet));
             if (nbytes != sizeof(udp_packet)) {
                 fprintf(stdout, "cannot send udp packet %d\n", nbytes);
