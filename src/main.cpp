@@ -9,6 +9,7 @@
 
 #include <LocalHost.hpp>
 #include <AddressConversion.hpp>
+#include <Logger.hpp>
 #include <SpeedwireSocketFactory.hpp>
 #include <SpeedwireHeader.hpp>
 #include <SpeedwireEmeterProtocol.hpp>
@@ -18,8 +19,32 @@
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const double value);
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const std::string& value);
 
+class LogListener : public ILogListener {
+public:
+    virtual ~LogListener() {}
 
-int main(int argc, char **argv) {
+    virtual void log_msg(const std::string& msg, const LogLevel& level) {
+        fprintf(stdout, "%s", msg.c_str());
+    }
+
+    virtual void log_msg_w(const std::wstring& msg, const LogLevel& level) {
+        fprintf(stdout, "%ls", msg.c_str());
+    }
+};
+
+static Logger logger("main");
+
+
+int main(int argc, char** argv) {
+
+    // configure logger and logging levels
+    ILogListener* log_listener = new LogListener();
+    LogLevel log_level = LogLevel::LOG_ERROR | LogLevel::LOG_WARNING;
+    log_level = log_level | LogLevel::LOG_INFO_0;
+    log_level = log_level | LogLevel::LOG_INFO_1;
+    log_level = log_level | LogLevel::LOG_INFO_2;
+    log_level = log_level | LogLevel::LOG_INFO_3;
+    Logger::setLogListener(log_listener, log_level);
 
     // configure sockets; use unicast socket to avoid messing around with igmp issues
     LocalHost localhost;
@@ -113,7 +138,7 @@ int main(int argc, char **argv) {
 
     // check if the packet is fully assembled
     if (((uint8_t*)obis - udp_packet) != sizeof(udp_packet)) {
-        fprintf(stdout, "invalid udp packet size %lu\n", (unsigned long)((uint8_t*)obis - udp_packet));
+        logger.print(LogLevel::LOG_ERROR, "invalid udp packet size %lu\n", (unsigned long)((uint8_t*)obis - udp_packet));
     }
 
 #if 1
@@ -135,7 +160,8 @@ int main(int argc, char **argv) {
             // extract obis data from the emeter packet and print each obis element
             void* obis = emeter.getFirstObisElement();
             while (obis != NULL) {
-                emeter.printObisElement(obis, stderr);
+                //emeter.printObisElement(obis, stderr);
+                logger.print(LogLevel::LOG_INFO_2, "%s %s %s", SpeedwireEmeterProtocol::toHeaderString(obis).c_str(), SpeedwireEmeterProtocol::toValueString(obis, true).c_str(), SpeedwireEmeterProtocol::toValueString(obis, false).c_str());
                 obis = emeter.getNextObisElement(obis);
             }
         }
@@ -155,10 +181,10 @@ int main(int argc, char **argv) {
         std::vector<std::string> localIPs = localhost.getLocalIPv4Addresses();
         for (auto& local_ip_addr : localIPs) {
             SpeedwireSocket socket = socket_factory->getSendSocket(SpeedwireSocketFactory::UNICAST, local_ip_addr);
-            fprintf(stdout, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
+            logger.print(LogLevel::LOG_INFO_0, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
             int nbytes = socket.send(udp_packet, sizeof(udp_packet));
             if (nbytes != sizeof(udp_packet)) {
-                fprintf(stdout, "cannot send udp packet %d\n", nbytes);
+                logger.print(LogLevel::LOG_ERROR, "cannot send udp packet %d\n", nbytes);
             }
         }
 
