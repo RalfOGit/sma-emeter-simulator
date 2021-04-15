@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     Logger::setLogListener(log_listener, log_level);
 
     // configure sockets; use unicast socket to avoid messing around with igmp issues
-    LocalHost localhost;
+    LocalHost &localhost = LocalHost::getInstance();
     SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
 
     // define speedwire packet and initialize header
