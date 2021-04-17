@@ -201,7 +201,7 @@ void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const Obi
     // create a new obis data instance from the given obis data template instance
     ObisData temp(obis_data);
     // set its measurement value
-    temp.measurementValue->value = value;
+    temp.measurementValue.value = value;
     // convert it into the obis byte representation
     std::array<uint8_t, 12> byte_array = temp.toByteArray();
     // insert it into the given emeter packet 
@@ -213,7 +213,7 @@ void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const Obi
     // create a new obis data instance from the given obis data template instance
     ObisData temp(obis_data);
     // set its measurement value
-    temp.measurementValue->value_string = value;
+    temp.measurementValue.value_string = value;
     // convert it into the obis byte representation
     std::array<uint8_t, 12> byte_array = temp.toByteArray();
     // insert it into the given emeter packet 
