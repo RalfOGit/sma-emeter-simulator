@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
         int      offset     = protocol.getPayloadOffset();
 
         if (protocolID == SpeedwireHeader::sma_emeter_protocol_id) {
-            SpeedwireEmeterProtocol emeter(udp_packet + offset, sizeof(udp_packet) - offset);
+            SpeedwireEmeterProtocol emeter(protocol);
             uint16_t susyid = emeter.getSusyID();
             uint32_t serial = emeter.getSerialNumber();
             uint32_t timer  = emeter.getTime();
