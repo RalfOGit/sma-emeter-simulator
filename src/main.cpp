@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
     // configure sockets; use unicast socket to avoid messing around with igmp issues
     LocalHost &localhost = LocalHost::getInstance();
-    SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
+    SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
 
     // define speedwire packet and initialize header
     uint8_t udp_packet[600];
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
         // send speedwire emeter packet to all local interfaces
         std::vector<std::string> localIPs = localhost.getLocalIPv4Addresses();
         for (auto& local_ip_addr : localIPs) {
-            SpeedwireSocket socket = socket_factory->getSendSocket(SpeedwireSocketFactory::UNICAST, local_ip_addr);
+            SpeedwireSocket socket = socket_factory->getSendSocket(SpeedwireSocketFactory::SocketType::UNICAST, local_ip_addr);
             logger.print(LogLevel::LOG_INFO_0, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
             int nbytes = socket.send(udp_packet, sizeof(udp_packet));
             if (nbytes != sizeof(udp_packet)) {
