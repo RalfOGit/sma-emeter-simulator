@@ -14,6 +14,7 @@
 #include <SpeedwireHeader.hpp>
 #include <SpeedwireEmeterProtocol.hpp>
 #include <ObisData.hpp>
+using namespace libspeedwire;
 
 
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const double value);
