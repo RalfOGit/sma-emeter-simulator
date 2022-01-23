@@ -179,9 +179,9 @@ int main(int argc, char** argv) {
         emeter_packet.setTime(current_time);
 
         // send speedwire emeter packet to all local interfaces
-        std::vector<std::string> localIPs = localhost.getLocalIPv4Addresses();
+        const std::vector<std::string>& localIPs = localhost.getLocalIPv4Addresses();
         for (auto& local_ip_addr : localIPs) {
-            SpeedwireSocket socket = socket_factory->getSendSocket(SpeedwireSocketFactory::SocketType::UNICAST, local_ip_addr);
+            SpeedwireSocket& socket = socket_factory->getSendSocket(SpeedwireSocketFactory::SocketType::UNICAST, local_ip_addr);
             logger.print(LogLevel::LOG_INFO_0, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
             int nbytes = socket.send(udp_packet, sizeof(udp_packet));
             if (nbytes != sizeof(udp_packet)) {
