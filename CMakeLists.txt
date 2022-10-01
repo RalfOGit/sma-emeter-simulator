@@ -27,7 +27,7 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 # build configuration
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 add_dependencies(${PROJECT_NAME} speedwire)
-target_include_directories(${PROJECT_NAME} PUBLIC speedwire)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE_DIR} speedwire)
 
 if (MSVC)
 target_link_libraries(${PROJECT_NAME} speedwire ws2_32.lib Iphlpapi.lib)
