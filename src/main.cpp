@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
     // define speedwire packet and initialize header
     uint8_t udp_packet[UDP_PACKET_SIZE];
-    uint16_t udp_payload_length = sizeof(udp_packet) - SpeedwireHeader::getPayloadOffset(SpeedwireHeader::sma_emeter_protocol_id) - 2;  // -2 for whatever reason
+    uint16_t udp_payload_length = (uint16_t)(UDP_PACKET_SIZE - SpeedwireHeader::getPayloadOffset(SpeedwireHeader::sma_emeter_protocol_id) - 2);  // -2 for whatever reason
 
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
     speedwire_packet.setDefaultHeader(1, udp_payload_length, SpeedwireHeader::sma_emeter_protocol_id);
