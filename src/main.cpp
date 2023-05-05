@@ -17,6 +17,11 @@
 using namespace libspeedwire;
 
 
+// since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
+// and the udp packet size is 608 bytes
+#define INCLUDE_FREQUENCY_MEASUREMENT (1)
+
+
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const double value);
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const std::string& value);
 
@@ -34,11 +39,6 @@ public:
 };
 
 static Logger logger("main");
-
-
-// since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
-// and the udp packet size is 608 bytes
-#define INCLUDE_FREQUENCY_MEASUREMENT (1)
 
 
 int main(int argc, char** argv) {
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 #if INCLUDE_FREQUENCY_MEASUREMENT
     uint8_t udp_packet[608];
 #else
-    uint8_t udp_packet[606];
+    uint8_t udp_packet[600];
 #endif
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
     speedwire_packet.setDefaultHeader(1, 580, SpeedwireHeader::sma_emeter_protocol_id);
