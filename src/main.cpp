@@ -36,7 +36,13 @@ public:
 static Logger logger("main");
 
 
+// since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
+// and the udp packet size is 608 bytes
+#define INCLUDE_FREQUENCY_MEASUREMENT (1)
+
+
 int main(int argc, char** argv) {
+
 
     // configure logger and logging levels
     ILogListener* log_listener = new LogListener();
@@ -52,7 +58,11 @@ int main(int argc, char** argv) {
     SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
 
     // define speedwire packet and initialize header
-    uint8_t udp_packet[600];
+#if INCLUDE_FREQUENCY_MEASUREMENT
+    uint8_t udp_packet[608];
+#else
+    uint8_t udp_packet[606];
+#endif
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
     speedwire_packet.setDefaultHeader(1, 580, SpeedwireHeader::sma_emeter_protocol_id);
 
@@ -81,6 +91,9 @@ int main(int argc, char** argv) {
     obis = insert(emeter_packet, obis, ObisData::NegativeApparentPowerTotal,     0.00);
     obis = insert(emeter_packet, obis, ObisData::NegativeApparentEnergyTotal,  327.62);
     obis = insert(emeter_packet, obis, ObisData::PowerFactorTotal,               0.54);
+#if INCLUDE_FREQUENCY_MEASUREMENT
+    obis = insert(emeter_packet, obis, ObisData::Frequency,                     50.16);
+#endif
 
     // line 1
     obis = insert(emeter_packet, obis, ObisData::PositiveActivePowerL1,          0.00);
