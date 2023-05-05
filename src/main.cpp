@@ -20,6 +20,11 @@ using namespace libspeedwire;
 // since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
 // and the udp packet size is 608 bytes
 #define INCLUDE_FREQUENCY_MEASUREMENT (1)
+#if INCLUDE_FREQUENCY_MEASUREMENT
+  #define UDP_PACKET_SIZE 608
+#else
+  #define UDP_PACKET_SIZE 600
+#endif
 
 
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const double value);
@@ -43,7 +48,6 @@ static Logger logger("main");
 
 int main(int argc, char** argv) {
 
-
     // configure logger and logging levels
     ILogListener* log_listener = new LogListener();
     LogLevel log_level = LogLevel::LOG_ERROR | LogLevel::LOG_WARNING;
@@ -58,13 +62,11 @@ int main(int argc, char** argv) {
     SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
 
     // define speedwire packet and initialize header
-#if INCLUDE_FREQUENCY_MEASUREMENT
-    uint8_t udp_packet[608];
-#else
-    uint8_t udp_packet[600];
-#endif
+    uint8_t udp_packet[UDP_PACKET_SIZE];
+    uint16_t udp_payload_length = sizeof(udp_packet) - SpeedwireHeader::getPayloadOffset(SpeedwireHeader::sma_emeter_protocol_id) - 2;  // -2 for whatever reason
+
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
-    speedwire_packet.setDefaultHeader(1, 580, SpeedwireHeader::sma_emeter_protocol_id);
+    speedwire_packet.setDefaultHeader(1, udp_payload_length, SpeedwireHeader::sma_emeter_protocol_id);
 
     SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
     emeter_packet.setSusyID(349);
