@@ -19,11 +19,17 @@ using namespace libspeedwire;
 
 // since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
 // and the udp packet size is 608 bytes
+#define EVCHARGER_EMETER_SIMULATION (0)
 #define INCLUDE_FREQUENCY_MEASUREMENT (1)
-#if INCLUDE_FREQUENCY_MEASUREMENT
+#if INCLUDE_FREQUENCY_MEASUREMENT && EVCHARGER_EMETER_SIMULATION
+  #define UDP_PACKET_SIZE 610
+  #define PROTOCOL_ID (SpeedwireHeader::sma_evcharger_emeter_protocol_id)
+#elif INCLUDE_FREQUENCY_MEASUREMENT
   #define UDP_PACKET_SIZE 608
+  #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
 #else
   #define UDP_PACKET_SIZE 600
+  #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
 #endif
 
 
@@ -63,13 +69,20 @@ int main(int argc, char** argv) {
 
     // define speedwire packet and initialize header
     uint8_t udp_packet[UDP_PACKET_SIZE];
-    uint16_t udp_payload_length = (uint16_t)(UDP_PACKET_SIZE - SpeedwireHeader::getPayloadOffset(SpeedwireHeader::sma_emeter_protocol_id) - 2);  // -2 for whatever reason
+    uint16_t udp_payload_length = (uint16_t)(UDP_PACKET_SIZE - SpeedwireHeader::getPayloadOffset(PROTOCOL_ID));
+    if (PROTOCOL_ID == SpeedwireHeader::sma_emeter_protocol_id) {
+        udp_payload_length -= 2;      // -2 for whatever reason
+    }
 
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
-    speedwire_packet.setDefaultHeader(1, udp_payload_length, SpeedwireHeader::sma_emeter_protocol_id);
+    speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
 
     SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
-    emeter_packet.setSusyID(349);
+#if EVCHARGER_EMETER_SIMULATION
+    emeter_packet.setSusyID(0x0174);    // Sunny Home Manager 20
+#else
+    emeter_packet.setSusyID(349);       // Energy Meter 20
+#endif
     emeter_packet.setSerialNumber(1901567274);
     emeter_packet.setTime((uint32_t)localhost.getUnixEpochTimeInMs());
 
@@ -171,7 +184,8 @@ int main(int argc, char** argv) {
         uint16_t protocolID = protocol.getProtocolID();
         int      offset     = protocol.getPayloadOffset();
 
-        if (protocolID == SpeedwireHeader::sma_emeter_protocol_id) {
+        if (protocolID == SpeedwireHeader::sma_emeter_protocol_id ||
+            protocolID == SpeedwireHeader::sma_evcharger_emeter_protocol_id) {
             SpeedwireEmeterProtocol emeter(protocol);
             uint16_t susyid = emeter.getSusyID();
             uint32_t serial = emeter.getSerialNumber();
