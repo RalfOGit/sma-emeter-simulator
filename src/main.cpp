@@ -149,7 +149,11 @@ int main(int argc, char** argv) {
     obis = insert(emeter_packet, obis, ObisData::PowerFactorL3,                  0.40);
 
     // software version
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.82");
+#if INCLUDE_FREQUENCY_MEASUREMENT
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.03.4.R");     // 82 is ASCII 'R'
+#else
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.R");     // 82 is ASCII 'R'
+#endif
     obis = insert(emeter_packet, obis, ObisData::EndOfData,       "");
 
     // check if the packet is fully assembled
