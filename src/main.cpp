@@ -16,13 +16,13 @@
 #include <ObisData.hpp>
 using namespace libspeedwire;
 
-// sunny home manager uses a different speedwire header and allows unicast transmission
-#define HOME_MANAGER_SIMULATION (0)
+// sunny home manager in version 2.07.x.y used a different speedwire header (when unicast transmission was introduced)
+#define USE_EXTENDED_EMETER_PROTOCOL (0)
 
 // since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
 #define INCLUDE_FREQUENCY_MEASUREMENT (1)
 
-#if INCLUDE_FREQUENCY_MEASUREMENT && HOME_MANAGER_SIMULATION
+#if INCLUDE_FREQUENCY_MEASUREMENT && USE_EXTENDED_EMETER_PROTOCOL
   #define UDP_PACKET_SIZE 610
   #define PROTOCOL_ID (SpeedwireHeader::sma_extended_emeter_protocol_id)
 #elif INCLUDE_FREQUENCY_MEASUREMENT
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
 
     SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
-#if HOME_MANAGER_SIMULATION
+#if USE_EXTENDED_EMETER_PROTOCOL
     emeter_packet.setSusyID(0x0174);    // Home Manager 20
 #else
     emeter_packet.setSusyID(349);       // Energy Meter 20
@@ -165,6 +165,8 @@ int main(int argc, char** argv) {
     // software version
 #if INCLUDE_FREQUENCY_MEASUREMENT
     obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.03.4.R");
+#elif USE_EXTENDED_EMETER_PROTOCOL
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.07.4.R");
 #else
     obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.R");
 #endif
