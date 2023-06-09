@@ -16,14 +16,15 @@
 #include <ObisData.hpp>
 using namespace libspeedwire;
 
+// sunny home manager uses a different speedwire header and allows unicast transmission
+#define HOME_MANAGER_SIMULATION (0)
 
 // since firmware version 2.03.4.R a frequency measurement has been added to emeter packets
-// and the udp packet size is 608 bytes
-#define EVCHARGER_EMETER_SIMULATION (0)
 #define INCLUDE_FREQUENCY_MEASUREMENT (1)
-#if INCLUDE_FREQUENCY_MEASUREMENT && EVCHARGER_EMETER_SIMULATION
+
+#if INCLUDE_FREQUENCY_MEASUREMENT && HOME_MANAGER_SIMULATION
   #define UDP_PACKET_SIZE 610
-  #define PROTOCOL_ID (SpeedwireHeader::sma_evcharger_emeter_protocol_id)
+  #define PROTOCOL_ID (SpeedwireHeader::sma_extended_emeter_protocol_id)
 #elif INCLUDE_FREQUENCY_MEASUREMENT
   #define UDP_PACKET_SIZE 608
   #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
@@ -78,8 +79,8 @@ int main(int argc, char** argv) {
     speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
 
     SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
-#if EVCHARGER_EMETER_SIMULATION
-    emeter_packet.setSusyID(0x0174);    // Sunny Home Manager 20
+#if HOME_MANAGER_SIMULATION
+    emeter_packet.setSusyID(0x0174);    // Home Manager 20
 #else
     emeter_packet.setSusyID(349);       // Energy Meter 20
 #endif
@@ -163,9 +164,9 @@ int main(int argc, char** argv) {
 
     // software version
 #if INCLUDE_FREQUENCY_MEASUREMENT
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.03.4.R");     // 82 is ASCII 'R'
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.03.4.R");
 #else
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.R");     // 82 is ASCII 'R'
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.R");
 #endif
     obis = insert(emeter_packet, obis, ObisData::EndOfData,       "");
 
@@ -185,7 +186,7 @@ int main(int argc, char** argv) {
         int      offset     = protocol.getPayloadOffset();
 
         if (protocolID == SpeedwireHeader::sma_emeter_protocol_id ||
-            protocolID == SpeedwireHeader::sma_evcharger_emeter_protocol_id) {
+            protocolID == SpeedwireHeader::sma_extended_emeter_protocol_id) {
             SpeedwireEmeterProtocol emeter(protocol);
             uint16_t susyid = emeter.getSusyID();
             uint32_t serial = emeter.getSerialNumber();
