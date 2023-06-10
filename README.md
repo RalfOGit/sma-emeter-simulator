@@ -1,9 +1,43 @@
 # sma-emeter-simulator
 An SMA(TM) emeter simulator written in C++. It mimics an SMA(TM) emeter device on your local network by generating the same kind of udp packets that an actual SMA(TM) emeter would generate.
 
-SMA-Emeters(TM) send out udp packets including electrical power and energy measurements at intervals of 1000ms. Each udp packet is 608 bytes long, or 600 bytes for older firmware versions, long and its format is specified in a publicly available specification document provided by the manufacturer (https://developer.sma.de/fileadmin/content/global/Partner/Documents/SMA_Labs/EMETER-Protokoll-TI-en-10.pdf). There is also a udp packet format that is 610 bytes long, based on a 20 bytes SMA packet header. Depending on how you configure the simulator, it can generate these different udp packet formats.
+SMA-Emeters(TM) send out udp packets including electrical power and energy measurements at intervals of 1000ms. The general udp packet format is specified in a publicly available specification document provided by the manufacturer (https://developer.sma.de/fileadmin/content/global/Partner/Documents/SMA_Labs/EMETER-Protokoll-TI-en-10.pdf).
 
-The executable starts by assembling a udp datagram as described in the SMA-Emeter(TM) specification document.
+The simulator supports different emeter types. Depending on how you configure the simulator, it can generate these different udp packet formats.:
+
+Emeter-10
+
+    Susy-ID: 270 (0x010E)
+    Protocol-ID: 0x6069
+    UDP packet size: 600 bytes
+    SMA header size: 18 bytes
+    Multicast: 239.12.255.254 port 9522
+
+Emeter-20
+
+    Susy-ID: 349 (0x015D)
+    Protocol-ID: 0x6069
+    UDP packet size: 608 bytes since ObisData::Frequency was added with firmware version 2.03.4.R; 600 bytes was used before
+    SMA header size: 18 bytes
+    Multicast: 239.12.255.254 port 9522
+
+Sunny Home Manager 20
+
+    Susy-ID: 372 (0x0174)
+    Protocol-ID: 0x6069
+    UDP packet size: 608 bytes since firmware version 2.03.4.R; 600 bytes before - ObisData::Frequency was added with firmware version 2.03.4.R
+    SMA header size: 18 bytes
+    Multicast: 239.12.255.254 port 9522
+    Unicast: if configured
+    
+    Firmware version 2.07.x used a different format for unicast transmission:
+    Susy-ID: 372 (0x0174)
+    Protocol-ID: 0x6081
+    UDP packet size: 610 bytes
+    SMA header size: 20 bytes
+    Unicast: if configured
+
+The executable starts by assembling a udp datagram according to one of the above mentioned configurations.
 
 Afterwards it starts an infinite main loop. Within the main loop it repetitively transmits the same udp datagram every 1000 milliseconds, while updating the timestamp inside the packet.
 
