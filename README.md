@@ -25,7 +25,7 @@ Sunny Home Manager 20
 
     Susy-ID: 372 (0x0174)
     Protocol-ID: 0x6069
-    UDP packet size: 608 bytes since firmware version 2.03.4.R; 600 bytes before - ObisData::Frequency was added with firmware version 2.03.4.R
+    UDP packet size: 608 bytes since ObisData::Frequency was added with firmware version 2.03.4.R; 600 bytes was used before
     SMA header size: 18 bytes
     Multicast: 239.12.255.254 port 9522
     Unicast: if configured
