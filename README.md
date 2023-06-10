@@ -17,7 +17,7 @@ Emeter-20
 
     Susy-ID: 349 (0x015D)
     Protocol-ID: 0x6069
-    UDP packet size: 608 bytes since ObisData::Frequency was added with firmware version 2.03.4.R; 600 bytes was used before
+    UDP packet size: 608 bytes since frequency was added with firmware version 2.03.4.R; 600 bytes was used before
     SMA header size: 18 bytes
     Multicast: 239.12.255.254 port 9522
 
@@ -25,7 +25,7 @@ Sunny Home Manager 20
 
     Susy-ID: 372 (0x0174)
     Protocol-ID: 0x6069
-    UDP packet size: 608 bytes since ObisData::Frequency was added with firmware version 2.03.4.R; 600 bytes was used before
+    UDP packet size: 608 bytes since frequency was added with firmware version 2.03.4.R; 600 bytes was used before
     SMA header size: 18 bytes
     Multicast: 239.12.255.254 port 9522
     Unicast: if configured
@@ -78,7 +78,7 @@ Measurements are encoded as OBIS data fields. OBIS is defined in IEC 62056-6-1. 
     ObisData::NegativeApparentPowerTotal (0, 10, 4,    0.00) 
     ObisData::NegativeApparentEnergyTotal(0, 10, 8,  327.62) 
     ObisData::PowerFactorTotal           (0, 13, 4,    0.54) 
-    ObisData::Frequency                  (0, 14, 4,   50.16) 
+    ObisData::Frequency                  (0, 14, 4,   50.16) // since firmware version 2.03.4.R
     
     // L1
     ObisData::PositiveActivePowerL1      (0, 21, 4,    0.00) 
