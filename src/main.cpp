@@ -16,6 +16,16 @@
 #include <ObisData.hpp>
 using namespace libspeedwire;
 
+// susyids for different emeter device types
+#define SUSYID_EMETER_10        (270)
+#define SUSYID_EMETER_20        (349)
+#define SUSYID_HOMEMANAGER_20   (372)
+
+#define SUSYID  SUSYID_EMETER_20
+
+// serial number of the device - choose an arbitrary number here, the combination of susyid and serialnumber must be unique in a given speedwire network
+#define SERIAL_NUMBER (1901567274)
+
 // sunny home manager in version 2.07.x.y used a different speedwire header (when unicast transmission was introduced)
 #define USE_EXTENDED_EMETER_PROTOCOL (0)
 
@@ -31,6 +41,14 @@ using namespace libspeedwire;
 #else
   #define UDP_PACKET_SIZE 600
   #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
+#endif
+
+#if INCLUDE_FREQUENCY_MEASUREMENT
+  #define FIRMWARE_VERSION    ("2.03.4.R")
+#elif USE_EXTENDED_EMETER_PROTOCOL
+  #define FIRMWARE_VERSION    ("2.07.4.R")
+#else
+  #define FIRMWARE_VERSION    ("2.0.18.R")
 #endif
 
 
@@ -79,12 +97,8 @@ int main(int argc, char** argv) {
     speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
 
     SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
-#if USE_EXTENDED_EMETER_PROTOCOL
-    emeter_packet.setSusyID(0x0174);    // Home Manager 20
-#else
-    emeter_packet.setSusyID(349);       // Energy Meter 20
-#endif
-    emeter_packet.setSerialNumber(1901567274);
+    emeter_packet.setSusyID(SUSYID);
+    emeter_packet.setSerialNumber(SERIAL_NUMBER);
     emeter_packet.setTime((uint32_t)localhost.getUnixEpochTimeInMs());
 
     // insert all measurements available in an sma emeter packet into udp packet payload;
@@ -162,14 +176,8 @@ int main(int argc, char** argv) {
     obis = insert(emeter_packet, obis, ObisData::VoltageL3,                    230.09);
     obis = insert(emeter_packet, obis, ObisData::PowerFactorL3,                  0.40);
 
-    // software version
-#if INCLUDE_FREQUENCY_MEASUREMENT
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.03.4.R");
-#elif USE_EXTENDED_EMETER_PROTOCOL
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.07.4.R");
-#else
-    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, "2.0.18.R");
-#endif
+    // software version and end of data
+    obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, FIRMWARE_VERSION);
     obis = insert(emeter_packet, obis, ObisData::EndOfData,       "");
 
     // check if the packet is fully assembled
