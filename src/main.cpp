@@ -12,6 +12,7 @@
 #include <Logger.hpp>
 #include <SpeedwireSocketFactory.hpp>
 #include <SpeedwireHeader.hpp>
+#include <SpeedwireTagHeader.hpp>
 #include <SpeedwireEmeterProtocol.hpp>
 #include <ObisData.hpp>
 using namespace libspeedwire;
@@ -34,13 +35,13 @@ using namespace libspeedwire;
 
 #if INCLUDE_FREQUENCY_MEASUREMENT && USE_EXTENDED_EMETER_PROTOCOL
   #define UDP_PACKET_SIZE 610
-  #define PROTOCOL_ID (SpeedwireHeader::sma_extended_emeter_protocol_id)
+  #define PROTOCOL_ID (SpeedwireData2Packet::sma_extended_emeter_protocol_id)
 #elif INCLUDE_FREQUENCY_MEASUREMENT
   #define UDP_PACKET_SIZE 608
-  #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
+  #define PROTOCOL_ID (SpeedwireData2Packet::sma_emeter_protocol_id)
 #else
   #define UDP_PACKET_SIZE 600
-  #define PROTOCOL_ID (SpeedwireHeader::sma_emeter_protocol_id)
+  #define PROTOCOL_ID (SpeedwireData2Packet::sma_emeter_protocol_id)
 #endif
 
 #if INCLUDE_FREQUENCY_MEASUREMENT
@@ -86,17 +87,20 @@ int main(int argc, char** argv) {
     LocalHost &localhost = LocalHost::getInstance();
     SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
 
-    // define speedwire packet and initialize header
+    // define speedwire packet
     uint8_t udp_packet[UDP_PACKET_SIZE];
-    uint16_t udp_payload_length = (uint16_t)(UDP_PACKET_SIZE - SpeedwireHeader::getPayloadOffset(PROTOCOL_ID));
-    if (PROTOCOL_ID == SpeedwireHeader::sma_emeter_protocol_id) {
-        udp_payload_length -= 2;      // -2 for whatever reason
-    }
-
     SpeedwireHeader speedwire_packet(udp_packet, sizeof(udp_packet));
-    speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
 
-    SpeedwireEmeterProtocol emeter_packet(speedwire_packet);
+    // determine the emeter payload length by subtracting the tag header overhead of the default tag header structure
+    unsigned long udp_header_length = speedwire_packet.getDefaultHeaderTotalLength(1, 0, 0);
+    uint16_t udp_payload_length = (uint16_t)(UDP_PACKET_SIZE - udp_header_length);
+
+    // create a tag header structure using the correct emeter payload length
+    speedwire_packet.setDefaultHeader(1, udp_payload_length, PROTOCOL_ID);
+    uint8_t *end_of_emeter_payload = (uint8_t*)speedwire_packet.findTagPacket(SpeedwireTagHeader::sma_tag_endofdata);
+
+    SpeedwireData2Packet data2_packet(speedwire_packet);
+    SpeedwireEmeterProtocol emeter_packet(data2_packet);
     emeter_packet.setSusyID(SUSYID);
     emeter_packet.setSerialNumber(SERIAL_NUMBER);
     emeter_packet.setTime((uint32_t)localhost.getUnixEpochTimeInMs());
@@ -178,25 +182,29 @@ int main(int argc, char** argv) {
 
     // software version and end of data
     obis = insert(emeter_packet, obis, ObisData::SoftwareVersion, FIRMWARE_VERSION);
-    obis = insert(emeter_packet, obis, ObisData::EndOfData,       "");
+    //obis = insert(emeter_packet, obis, ObisData::EndOfData,       "");    // this is identical to the end of data tag header, i.e. the last 4 bytes of the udp packet
+
+    //LocalHost::hexdump(udp_packet, UDP_PACKET_SIZE);
 
     // check if the packet is fully assembled
-    if (((uint8_t*)obis - udp_packet) != sizeof(udp_packet)) {
+    if (obis != end_of_emeter_payload) {
         logger.print(LogLevel::LOG_ERROR, "invalid udp packet size %lu\n", (unsigned long)((uint8_t*)obis - udp_packet));
     }
 
 #if 1
     // for debugging purposes
     SpeedwireHeader protocol(udp_packet, sizeof(udp_packet));
-    bool valid = protocol.checkHeader();
+    bool valid = protocol.isValidData2Packet();
     if (valid) {
-        uint32_t group      = protocol.getGroup();
-        uint16_t length     = protocol.getLength();
-        uint16_t protocolID = protocol.getProtocolID();
-        int      offset     = protocol.getPayloadOffset();
 
-        if (protocolID == SpeedwireHeader::sma_emeter_protocol_id ||
-            protocolID == SpeedwireHeader::sma_extended_emeter_protocol_id) {
+        SpeedwireData2Packet data2_packet(protocol);
+        uint16_t length     = data2_packet.getTagLength();
+        uint16_t protocolID = data2_packet.getProtocolID();
+        int      offset     = data2_packet.getPayloadOffset();
+
+        if (data2_packet.isEmeterProtocolID() ||
+            data2_packet.isExtendedEmeterProtocolID()) {
+
             SpeedwireEmeterProtocol emeter(protocol);
             uint16_t susyid = emeter.getSusyID();
             uint32_t serial = emeter.getSerialNumber();
