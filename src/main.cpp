@@ -52,6 +52,8 @@ using namespace libspeedwire;
   #define FIRMWARE_VERSION    ("2.0.18.R")
 #endif
 
+#define USE_MULTICAST_SCOCKET (1)
+
 
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const double value);
 static void* insert(SpeedwireEmeterProtocol& emeter_packet, void* const obis, const ObisData& obis_data, const std::string& value);
@@ -85,7 +87,11 @@ int main(int argc, char** argv) {
 
     // configure sockets; use unicast socket to avoid messing around with igmp issues
     LocalHost &localhost = LocalHost::getInstance();
-    SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
+#if USE_MULTICAST_SCOCKET
+    SpeedwireSocketFactory *socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_SINGLE_SOCKET);
+#else
+    SpeedwireSocketFactory* socket_factory = SpeedwireSocketFactory::getInstance(localhost, SpeedwireSocketFactory::SocketStrategy::ONE_UNICAST_SOCKET_FOR_EACH_INTERFACE);
+#endif
 
     // define speedwire packet
     uint8_t udp_packet[UDP_PACKET_SIZE];
@@ -233,9 +239,15 @@ int main(int argc, char** argv) {
         // send speedwire emeter packet to all local interfaces
         const std::vector<std::string>& localIPs = localhost.getLocalIPv4Addresses();
         for (auto& local_ip_addr : localIPs) {
+#if USE_MULTICAST_SCOCKET
+            SpeedwireSocket socket = SpeedwireSocketFactory::getInstance(localhost)->getSendSocket(SpeedwireSocketFactory::SocketType::MULTICAST, local_ip_addr);
+            logger.print(LogLevel::LOG_INFO_0, "multicast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
+            int nbytes = socket.sendto(udp_packet, sizeof(udp_packet), socket.getSpeedwireMulticastIn4Address(), AddressConversion::toInAddress(local_ip_addr));
+#else
             SpeedwireSocket& socket = socket_factory->getSendSocket(SpeedwireSocketFactory::SocketType::UNICAST, local_ip_addr);
-            logger.print(LogLevel::LOG_INFO_0, "broadcast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
+            logger.print(LogLevel::LOG_INFO_0, "multicast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
             int nbytes = socket.send(udp_packet, sizeof(udp_packet));
+#endif
             if (nbytes != sizeof(udp_packet)) {
                 logger.print(LogLevel::LOG_ERROR, "cannot send udp packet %d\n", nbytes);
             }
