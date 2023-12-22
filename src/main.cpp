@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
         for (auto& local_ip_addr : localIPs) {
 #if USE_MULTICAST_SCOCKET
             SpeedwireSocket socket = SpeedwireSocketFactory::getInstance(localhost)->getSendSocket(SpeedwireSocketFactory::SocketType::MULTICAST, local_ip_addr);
-            logger.print(LogLevel::LOG_INFO_0, "multicast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), socket.getLocalInterfaceAddress().c_str());
+            logger.print(LogLevel::LOG_INFO_0, "multicast sma emeter packet to %s (via interface %s)\n", AddressConversion::toString(socket.getSpeedwireMulticastIn4Address()).c_str(), local_ip_addr.c_str());
             int nbytes = socket.sendto(udp_packet, sizeof(udp_packet), socket.getSpeedwireMulticastIn4Address(), AddressConversion::toInAddress(local_ip_addr));
 #else
             SpeedwireSocket& socket = socket_factory->getSendSocket(SpeedwireSocketFactory::SocketType::UNICAST, local_ip_addr);
